@@ -21,9 +21,17 @@ const TodoSchema = new mongoose.Schema({
   },
   dueDate: {
     type: Date
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   }
 }, {
   timestamps: true
 });
+
+// Create index for faster queries by user
+TodoSchema.index({ user: 1 });
 
 module.exports = mongoose.model('Todo', TodoSchema);

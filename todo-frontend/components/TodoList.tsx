@@ -17,9 +17,19 @@ interface TodoListProps {
   onDeleteTodo: (id: string) => void;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ todos, onToggleComplete, onDeleteTodo }) => {
+const TodoList = ({ todos, onToggleComplete, onDeleteTodo }: TodoListProps) => {
   if (todos.length === 0) {
-    return <p className="text-center text-gray-500">No todos yet. Add one above!</p>;
+    return (
+      <div className="text-center py-10 px-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <p className="text-gray-500 text-lg">No todos yet</p>
+        <p className="text-gray-400 text-sm mt-1">Add a new task using the form above</p>
+      </div>
+    );
   }
 
   const getPriorityColor = (priority: string) => {
@@ -40,34 +50,39 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onToggleComplete, onDeleteTo
       {todos.map((todo) => (
         <li 
           key={todo._id} 
-          className={`p-4 border rounded-lg shadow-sm ${
+          className={`p-4 border rounded-lg shadow-sm transition-all duration-200 ${
             todo.completed ? 'bg-gray-50' : 'bg-white'
-          }`}
+          } hover:shadow-md`}
         >
           <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-3">
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => onToggleComplete(todo._id, !todo.completed)}
-                className="mt-1 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <h3 className={`font-medium ${todo.completed ? 'line-through text-gray-500' : ''}`}>
+            <div className="flex items-start space-x-3 flex-1 min-w-0">
+              <div className="flex-shrink-0 mt-1">
+                <input
+                  type="checkbox"
+                  checked={todo.completed}
+                  onChange={() => onToggleComplete(todo._id, !todo.completed)}
+                  className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className={`font-medium break-words ${todo.completed ? 'line-through text-gray-500' : ''}`}>
                   {todo.title}
                 </h3>
                 {todo.description && (
-                  <p className={`text-sm mt-1 ${todo.completed ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className={`text-sm mt-1 break-words ${todo.completed ? 'text-gray-400' : 'text-gray-600'}`}>
                     {todo.description}
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(todo.priority)}`}>
-                    {todo.priority}
+                    {todo.priority.charAt(0).toUpperCase() + todo.priority.slice(1)}
                   </span>
                   {todo.dueDate && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
-                      Due: {new Date(todo.dueDate).toLocaleDateString()}
+                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {new Date(todo.dueDate).toLocaleDateString()}
                     </span>
                   )}
                 </div>
@@ -75,7 +90,7 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onToggleComplete, onDeleteTo
             </div>
             <button
               onClick={() => onDeleteTodo(todo._id)}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 hover:text-red-700 flex-shrink-0 ml-2 p-1 rounded-full hover:bg-red-50 transition-colors"
               aria-label="Delete todo"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

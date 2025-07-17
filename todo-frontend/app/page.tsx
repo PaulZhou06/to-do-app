@@ -1,26 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import TodoList from '../components/TodoList';
 import TodoForm from '../components/TodoForm';
+import { useAuth } from '../contexts/AuthContext';
+import ProtectedRoute from '../components/ProtectedRoute';
+import Link from 'next/link';
 
 export default function Home() {
   const [todos, setTodos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchTodos = async () => {
+      if (!isAuthenticated) return;
+      
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:5000/api/todos');
+        const response = await fetch('http://localhost:5000/api/todos', {
+          credentials: 'include', // Include cookies for authentication
+        });
+        
         if (!response.ok) {
           throw new Error('Failed to fetch todos');
         }
+        
         const data = await response.json();
         setTodos(data);
         setError(null);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -28,15 +38,16 @@ export default function Home() {
     };
 
     fetchTodos();
-  }, []);
+  }, [isAuthenticated]);  // Re-fetch when authentication state changes
 
-  const addTodo = async (todo) => {
+  const addTodo = async (todo: any) => {
     try {
       const response = await fetch('http://localhost:5000/api/todos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify(todo),
       });
 
@@ -51,13 +62,14 @@ export default function Home() {
     }
   };
 
-  const toggleComplete = async (id, completed) => {
+  const toggleComplete = async (id: string, completed: boolean) => {
     try {
       const response = await fetch(`http://localhost:5000/api/todos/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({ completed }),
       });
 
@@ -74,10 +86,11 @@ export default function Home() {
     }
   };
 
-  const deleteTodo = async (id) => {
+  const deleteTodo = async (id: string) => {
     try {
       const response = await fetch(`http://localhost:5000/api/todos/${id}`, {
         method: 'DELETE',
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
@@ -93,16 +106,49 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-center">Todo App</h1>
-      <TodoForm onAddTodo={addTodo} />
-      {error && <p className="text-red-500 text-center">{error}</p>}
-      {isLoading ? (
-        <p className="text-center">Loading todos...</p>
+      
+      {isAuthenticated ? (
+        <ProtectedRoute children={
+          <>
+            <TodoForm onAddTodo={addTodo} />
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mt-4 mb-4" role="alert">
+                <span className="block sm:inline">{error}</span>
+                <button 
+                  className="absolute top-0 bottom-0 right-0 px-4 py-3" 
+                  onClick={() => setError(null)}
+                >
+                  <span className="sr-only">Dismiss</span>
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                  </svg>
+                </button>
+              </div>
+            )}
+            {isLoading ? (
+              <div className="flex justify-center items-center py-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+                <span className="ml-3 text-blue-500">Loading todos...</span>
+              </div>
+            ) : (
+              <TodoList
+                todos={todos}
+                onToggleComplete={toggleComplete}
+                onDeleteTodo={deleteTodo}
+              />
+            )}
+          </>
+        } />
       ) : (
-        <TodoList
-          todos={todos}
-          onToggleComplete={toggleComplete}
-          onDeleteTodo={deleteTodo}
-        />
+        <div className="text-center py-10">
+          <p className="text-lg mb-4">Please log in to manage your todos</p>
+          <Link 
+            href="/auth" 
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md inline-block"
+          >
+            Login / Register
+          </Link>
+        </div>
       )}
     </div>
   );

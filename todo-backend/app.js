@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
 
 // Load environment variables
 dotenv.config();
@@ -10,8 +11,12 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -20,6 +25,9 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Routes
 const todoRoutes = require('./routes/todos');
+const authRoutes = require('./routes/auth');
+
+app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 
 // Root route
